@@ -5,39 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>قائمة الطعام الفاخرة</title>
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
-  <script src="script.js" defer></script>
 </head>
 <body>
 
-  <!-- Header -->
-  <header class="glass-header">
-    <div class="header-content">
-      <h1 class="logo-text">✨ أهلاً وسهلاً بكم</h1>
-      <div id="table-display" class="table-badge">طاولة رقم: --</div>
-    </div>
+  <header class="menu-header">
+    <h1>✨ أهلاً وسهلاً بكم ✨</h1>
+    <div id="table-display" class="table-badge">طاولة رقم: --</div>
   </header>
 
-  <!-- Navigation Categories -->
   <nav class="categories-nav">
-    <button class="nav-btn active" onclick="filterCategory('all', this)">✨ الكل</button>
-    <button class="nav-btn" onclick="filterCategory('drinks', this)">🥤 مشروبات</button>
-    <button class="nav-btn" onclick="filterCategory('arabic', this)">🥙 أكل شرقي</button>
-    <button class="nav-btn" onclick="filterCategory('western', this)">🍕 أكل غربي</button>
-    <button class="nav-btn" onclick="filterCategory('starters', this)">🍟 مقبلات</button>
-    <button class="nav-btn" onclick="filterCategory('desserts', this)">🍰 حلويات</button>
+    <button class="cat-btn active" onclick="filterMenu('all')">✨ الكل</button>
+    <button class="cat-btn" onclick="filterMenu('drinks')">🥤 مشروبات</button>
+    <button class="cat-btn" onclick="filterMenu('arabic')">🥙 أكل شرقي</button>
+    <button class="cat-btn" onclick="filterMenu('western')">🍕 أكل غربي</button>
+    <button class="cat-btn" onclick="filterMenu('starters')">🍟 مقبلات</button>
+    <button class="cat-btn" onclick="filterMenu('desserts')">🍰 حلويات</button>
   </nav>
 
-  <!-- Menu Section -->
-  <main class="main-container">
-    <div id="menu-container" class="grid-layout"></div>
+  <main id="menu-container" class="menu-grid">
+    <!-- سيتم تعبئة الوجبات تلقائياً عبر الجافاسكريبت -->
   </main>
 
-  <!-- Floating Cart Button -->
-  <a href="cart.html" id="cart-link" class="floating-cart" title="السلة">
-    <span class="cart-icon">🛒</span>
-    <span id="cart-count" class="cart-badge">0</span>
-  </a>
+  <div class="floating-cart">
+    <a id="cart-link" href="cart.html" class="cart-floating-btn">
+      🛒 السلة <span id="cart-count" class="badge">0</span>
+    </a>
+  </div>
 
+  <script type="module" src="script.js"></script>
 </body>
 </html>
