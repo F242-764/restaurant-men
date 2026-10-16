@@ -27,11 +27,11 @@ function displayTableNumber() {
 }
 
 const menuItems = [
-  { name: "عصير برتقال", category: "drinks", price: 5000, ingredients: "برتقال طبيعي، سكر", image: "images/orange-juice.jpg" },
-  { name: "شاورما دجاج", category: "arabic", price: 12000, ingredients: "دجاج، ثوم، خبز عربي", image: "images/shawarma.jpg" },
-  { name: "بيتزا مارجريتا", category: "western", price: 15000, ingredients: "جبنة، طماطم، ريحان", image: "images/pizza.jpg" },
-  { name: "بطاطا مقلية", category: "starters", price: 6000, ingredients: "بطاطا، زيت، ملح", image: "images/fries.jpg" },
-  { name: "كنافة نابلسية", category: "desserts", price: 10000, ingredients: "جبنة، سميد، قطر", image: "images/kunafa.jpg" }
+  { name: "عصير برتقال", category: "drinks", price: 5000, ingredients: "برتقال طبيعي، سكر", image: "orange-juice.jpg" },
+  { name: "شاورما دجاج", category: "arabic", price: 12000, ingredients: "دجاج، ثوم، خبز عربي", image: "shawarma.jpg" },
+  { name: "بيتزا مارجريتا", category: "western", price: 15000, ingredients: "جبنة، طماطم، ريحان", image: "pizza.jpg" },
+  { name: "بطاطا مقلية", category: "starters", price: 6000, ingredients: "بطاطا، زيت، ملح", image: "fries.jpg" },
+  { name: "كنافة نابلسية", category: "desserts", price: 10000, ingredients: "جبنة، سميد، قطر", image: "kunafa.jpg" }
 ];
 
 window.adjustQty = function(index, delta) {
@@ -179,7 +179,6 @@ window.goBack = function() {
   window.location.href = `index.html?table=${table}`;
 };
 
-// إرسال الطلب المباشر إلى قاعدة البيانات
 window.sendOrder = async function() {
   const cart = JSON.parse(localStorage.getItem("cart")) || [];
   if (cart.length === 0) {
@@ -197,12 +196,11 @@ window.sendOrder = async function() {
   const grandTotal = cart.reduce((sum, item) => sum + item.total, 0);
 
   try {
-    // إضافة الطلب لقاعدة البيانات
     await addDoc(collection(db, "orders"), {
       tableNumber: table,
       items: cart,
       totalAmount: grandTotal,
-      status: "pending", // قيد الانتظار
+      status: "pending",
       createdAt: serverTimestamp()
     });
 
