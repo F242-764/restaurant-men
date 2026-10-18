@@ -42,12 +42,13 @@ window.adjustQty = function(index, delta) {
   qtyInput.value = val;
 };
 
-function renderMenu(items) {
+// دالة عرض الأطباق مع دعم التصفية حسب التصنيف
+function renderMenu(itemsToRender) {
   const container = document.getElementById("menu-container");
   if (!container) return;
 
   container.innerHTML = "";
-  items.forEach((item) => {
+  itemsToRender.forEach((item) => {
     const originalIndex = menuItems.findIndex(m => m.name === item.name);
     const div = document.createElement("div");
     div.className = "menu-item";
@@ -72,6 +73,20 @@ function renderMenu(items) {
   updateCartBadge();
   updateCartLink();
 }
+
+// دالة تصفية التصنيفات عند الضغط على الأيقونات والأزرار
+window.filterCategory = function(category) {
+  // إزالة التنشيط عن كل الأزرار وإضافته للزر الحالي
+  document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
+  if (category === 'all') {
+    renderMenu(menuItems);
+  } else {
+    const filtered = menuItems.filter(item => item.category === category);
+    renderMenu(filtered);
+  }
+};
 
 function updateCartLink() {
   const cartLink = document.getElementById("cart-link");
