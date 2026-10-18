@@ -3,38 +3,268 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>قائمة الطعام الفاخرة</title>
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
-  <script type="module" src="script.js"></script>
+  <title>قائمة الطعام - المنيو الرقمي</title>
+  <style>
+    :root {
+      --bg-color: #121212;
+      --card-bg: #1e1e1e;
+      --accent-color: #ff9800;
+      --text-color: #ffffff;
+      --text-muted: #aaa;
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      padding-bottom: 100px;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 25px;
+      border-bottom: 2px solid var(--accent-color);
+      padding-bottom: 15px;
+    }
+    h1 {
+      color: var(--accent-color);
+      margin: 0 0 10px 0;
+    }
+    .table-badge {
+      display: inline-block;
+      background-color: #2e7d32;
+      color: #fff;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .menu-item {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      border: 1px solid #333;
+    }
+    .menu-item h3 {
+      margin: 0 0 10px 0;
+      color: var(--accent-color);
+    }
+    .menu-item p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .price {
+      font-weight: bold;
+      font-size: 16px;
+      color: #4caf50;
+    }
+    .btn-add {
+      background-color: var(--accent-color);
+      color: #000;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-add:hover {
+      background-color: #e68a00;
+    }
+    /* السلة المعلقة في الأسفل */
+    .cart-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: #1a1a1a;
+      border-top: 2px solid var(--accent-color);
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
+    }
+    .cart-info {
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .btn-submit {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-submit:disabled {
+      background-color: #555;
+      cursor: not-allowed;
+    }
+  </style>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
-  <!-- هيدر الصفحة بتنسيق أنيق وشريط السلة -->
-  <header class="glass-header">
-    <div class="header-content">
-      <h1 class="logo-text">🍽️ قائمة الطعام</h1>
-      <div id="table-display" class="table-badge">طاولة رقم: --</div>
-      <a id="cart-link" href="cart.html" class="cart-btn">
-        🛒 السلة <span id="cart-count">0</span>
-      </a>
-    </div>
+  <header>
+    <h1>🍕 قائمة الطعام الرقمية</h1>
+    <div id="table-display" class="table-badge">طاولة رقم: جاري التحديد...</div>
   </header>
 
-  <main class="main-container">
-    <!-- أزرار التصنيفات التفاعلية لفلترة الأصناف -->
-    <nav class="categories-bar">
-      <button class="category-btn active" onclick="filterCategory('all')">الكل 🌟</button>
-      <button class="category-btn" onclick="filterCategory('drinks')">مشروبات 🥤</button>
-      <button class="category-btn" onclick="filterCategory('arabic')">عربي 🍗</button>
-      <button class="category-btn" onclick="filterCategory('western')">غربي 🍕</button>
-      <button class="category-btn" onclick="filterCategory('starters')">مقبلات 🍟</button>
-      <button class="category-btn" onclick="filterCategory('desserts')">حلويات 🍰</button>
-    </nav>
+  <main class="menu-grid">
+    <!-- قائمة الوجبات (يمكنك إضافة أو تعديل الوجبات بسهولة) -->
+    <div class="menu-item">
+      <div>
+        <h3>برغر كلاسيك</h3>
+        <p>لحم بقر صَافي، جبنة شيدر، صوص خاص، ومخلل.</p>
+      </div>
+      <div class="price-row">
+        <span class="price">25,000 ل.س</span>
+        <button class="btn-add" onclick="addToCart('برغر كلاسيك', 25000)">إضافة +</button>
+      </div>
+    </div>
 
-    <!-- حاوية عرض الأطباق والوجبات -->
-    <div id="menu-container" class="menu-grid"></div>
+    <div class="menu-item">
+      <div>
+        <h3>بيتزا مارجريتا</h3>
+        <p>صلصة طماطم إيطالية، جبنة موزاريلا، وريحان طازج.</p>
+      </div>
+      <div class="price-row">
+        <span class="price">35,000 ل.س</span>
+        <button class="btn-add" onclick="addToCart('بيتزا مارجريتا', 35000)">إضافة +</button>
+      </div>
+    </div>
+
+    <div class="menu-item">
+      <div>
+        <h3>بطاطا مقلية</h3>
+        <p>بطاطا مقرمشة تقدم مع الكاتشب والمايونيز.</p>
+      </div>
+      <div class="price-row">
+        <span class="price">12,000 ل.س</span>
+        <button class="btn-add" onclick="addToCart('بطاطا مقلية', 12000)">إضافة +</button>
+      </div>
+    </div>
+
+    <div class="menu-item">
+      <div>
+        <h3>مشروب غازي</h3>
+        <p>كولا / سبرايت / فانتا بارد.</p>
+      </div>
+      <div class="price-row">
+        <span class="price">6,000 ل.س</span>
+        <button class="btn-add" onclick="addToCart('مشروب غازي', 6000)">إضافة +</button>
+      </div>
+    </div>
   </main>
 
+  <!-- شريط السلة وتأكيد الطلب -->
+  <div class="cart-bar">
+    <div class="cart-info">
+      المنتجات: <span id="cart-count">0</span> | المجموع: <span id="cart-total">0</span> ل.س
+    </div>
+    <button id="submit-btn" class="btn-submit" onclick="sendOrder()" disabled>تأكيد الطلب 🚀</button>
+  </div>
+
+  <script>
+    // 1. تهيئة فايربيس للمشروع
+    const firebaseConfig = {
+      authDomain: "restaurant-app-31bbe.firebaseapp.com",
+      projectId: "restaurant-app-31bbe",
+      storageBucket: "restaurant-app-31bbe.appspot.com",
+      messagingSenderId: "1028713289139",
+      appId: "1:1028713289139:web:8c3a1b"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // 2. قراءة رقم الطاولة من الرابط (مثال: ?table=1)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tableNumber = urlParams.get('table') || '1'; // افتراضياً طاولة رقم 1 إذا لم يحدد الرابط
+    document.getElementById('table-display').innerText = `طاولة رقم: ${tableNumber}`;
+
+    // 3. إدارة السلة
+    let cart = [];
+    let totalPrice = 0;
+
+    function addToCart(name, price) {
+      const existingItem = cart.find(item => item.name === name);
+      if (existingItem) {
+        existingItem.count += 1;
+      } else {
+        cart.push({ name: name, price: price, count: 1 });
+      }
+      
+      totalPrice += price;
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      const totalCount = cart.reduce((sum, item) => sum + item.count, 0);
+      document.getElementById('cart-count').innerText = totalCount;
+      document.getElementById('cart-total').innerText = totalPrice.toLocaleString();
+      
+      const submitBtn = document.getElementById('submit-btn');
+      if (cart.length > 0) {
+        submitBtn.disabled = false;
+      } else {
+        submitBtn.disabled = true;
+      }
+    }
+
+    // 4. إرسال الطلب إلى Firestore
+    function sendOrder() {
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = "جاري الإرسال...";
+
+      db.collection("orders").add({
+        tableNumber: tableNumber,
+        items: cart,
+        totalPrice: totalPrice,
+        status: "active",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      })
+      .then(() => {
+        alert("✅ تم إرسال طلبك بنجاح إلى المطبخ/لوحة التحكم!");
+        // إعادة إرساء السلة
+        cart = [];
+        totalPrice = 0;
+        updateCartUI();
+        submitBtn.innerText = "تأكيد الطلب 🚀";
+      })
+      .catch((error) => {
+        console.error("خطأ أثناء إرسال الطلب: ", error);
+        alert("❌ حدث خطأ أثناء إرسال الطلب، يرجى المحاولة مرة أخرى.");
+        submitBtn.disabled = false;
+        submitBtn.innerText = "تأكيد الطلب 🚀";
+      });
+    }
+  </script>
 </body>
 </html>
