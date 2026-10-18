@@ -3,33 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة إداراة الطلبات - المطعم</title>
-  <link rel="stylesheet" href="style.css">
+  <title>لوحة تحكم المطعم - إدارة الطاولات والطلبات</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: system-ui, sans-serif; background: #121212; color: #fff; padding: 20px; }
-    .admin-container { max-width: 900px; margin: 0 auto; }
-    .order-card { background: #1e1e1e; border: 1px solid #333; border-radius: 12px; padding: 15px; margin-bottom: 15px; border-right: 5px solid #ff9800; }
-    .order-header { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 8px; margin-bottom: 10px; font-weight: bold; }
-    .order-item { font-size: 0.95rem; margin: 5px 0; color: #ccc; }
-    .order-total { text-align: left; font-weight: bold; color: #4caf50; font-size: 1.1rem; margin-top: 10px; }
-    .badge-table { background: #ff9800; color: #000; padding: 3px 8px; border-radius: 5px; }
+    body { font-family: 'Tajawal', sans-serif; background: #121212; color: #fff; padding: 20px; margin: 0; }
+    h1 { text-align: center; color: #ff9800; margin-bottom: 30px; }
+    .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+    .order-card { background: #1e1e1e; border: 1px solid #333; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; }
+    .order-header h3 { margin: 0; color: #ff9800; font-size: 1.3rem; }
+    .table-badge { background: #ff9800; color: #000; padding: 4px 10px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; }
+    .items-list { margin-bottom: 15px; }
+    .item-row { display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 8px; border-bottom: 1px dashed #2a2a2a; padding-bottom: 4px; }
+    .item-note { color: #aaa; font-size: 0.85rem; margin-top: 2px; }
+    .total-section { font-weight: bold; font-size: 1.1rem; color: #4CAF50; margin-top: 10px; text-align: left; }
+    .close-btn { background: #f44336; color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: 'Tajawal', sans-serif; transition: background 0.3s; }
+    .close-btn:hover { background: #d32f2f; }
+    .empty-msg { text-align: center; color: #775; grid-column: 1 / -1; margin-top: 50px; font-size: 1.2rem; }
   </style>
 </head>
 <body>
 
-  <div class="admin-container">
-    <h1>🔔 لوحة إدارة الطلبات المباشرة</h1>
-    <p>تتم تحديث الطلبات تلقائياً فور إرسالها من الطاولات...</p>
-    <hr style="border-color: #333; margin-bottom: 20px;">
-
-    <div id="orders-list">
-      <p>جاري تحميل الطلبات...</p>
-    </div>
+  <h1>📊 لوحة تحكم المطعم - الطاولات النشطة</h1>
+  <div id="admin-orders-container" class="orders-grid">
+    <p class="empty-msg">جاري تحميل الطلبات النشطة...</p>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyApRa-o_DSAikev_sHEh1gaUGPFC9sJIBI",
@@ -44,48 +46,73 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const ordersList = document.getElementById("orders-list");
+    // الاستماع الفوري للطلبات من قاعدة البيانات
+    const container = document.getElementById("admin-orders-container");
 
-    // الاستماع المباشر للطلبات من Firebase
-    const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
-    
-    onSnapshot(q, (snapshot) => {
-      ordersList.innerHTML = "";
-      
+    onSnapshot(collection(db, "orders"), (snapshot) => {
+      container.innerHTML = "";
       if (snapshot.empty) {
-        ordersList.innerHTML = "<p>لا يوجد طلبات حالياً.</p>";
+        container.innerHTML = `<p class="empty-msg">لا توجد طلبات نشطة حالياً للطاولات.</p>`;
         return;
       }
 
-      snapshot.forEach((doc) => {
-        const data = doc.data();
+      snapshot.forEach((document) => {
+        const order = document.data();
+        const orderId = document.id;
+
         const card = document.createElement("div");
         card.className = "order-card";
-
+        
         let itemsHtml = "";
-        if (data.items && Array.isArray(data.items)) {
-          data.items.forEach(item => {
+        let calculatedTotal = 0;
+
+        if (order.items && Array.isArray(order.items)) {
+          order.items.forEach(item => {
+            const itemTotal = item.price * item.quantity;
+            calculatedTotal += itemTotal;
             itemsHtml += `
-              <div class="order-item">
-                • <b>${item.name}</b> (العدد: ${item.quantity}) ${item.notes ? `<span style="color:#f39c12;">[ملاحظة: ${item.notes}]</span>` : ''}
-              </div>`;
+              <div class="item-row">
+                <div>
+                  <span>${item.name} (${item.quantity}x)</span>
+                  ${item.notes ? `<div class="item-note">ملاحظة: ${item.notes}</div>` : ''}
+                </div>
+                <span>${itemTotal.toLocaleString()} ل.س</span>
+              </div>
+            `;
           });
         }
 
         card.innerHTML = `
           <div class="order-header">
-            <span class="badge-table">طاولة رقم: ${data.tableNumber || 'غير محددة'}</span>
-            <span style="font-size:0.85rem; color:#aaa;">${data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleTimeString('ar-SY') : 'الآن'}</span>
+            <h3>طلبية طاولة</h3>
+            <span class="table-badge">طاولة ${order.tableNumber || 'غير محددة'}</span>
           </div>
-          <div>${itemsHtml}</div>
-          <div class="order-total">الإجمالي: ${data.totalAmount ? data.totalAmount.toLocaleString() : 0} ل.س</div>
+          <div class="items-list">
+            ${itemsHtml}
+          </div>
+          <div class="total-section">
+            المجموع: ${calculatedTotal.toLocaleString()} ل.س
+          </div>
+          <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
+          <button class="close-btn" onclick="closeTableSession('${orderId}')">إغلاق الطاولة والمحاسبة 🚪💵</button>
         `;
-
-        ordersList.appendChild(card);
+        container.appendChild(card);
       });
     });
+
+    // دالة إغلاق الطاولة وحذف الطلب من النظام بعد المحاسبة
+    window.closeTableSession = async function(orderId) {
+      if (confirm("هل أنت متأكد من محاسبة الزبون وإغلاق الطاولة؟")) {
+        try {
+          await deleteDoc(doc(db, "orders", orderId));
+          alert("تم إغلاق الطاولة بنجاح وأصبحت فارغة!");
+        } catch (error) {
+          console.error("Error closing table: ", error);
+          alert("حدث خطأ أثناء إغلاق الطاولة.");
+        }
+      }
+    };
   </script>
+
 </body>
 </html>
-
-
