@@ -3,123 +3,160 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة تحكم المطعم - إدارة الطاولات والطلبات</title>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+  <title>لوحة تحكم المطعم - إدارة الطاولات</title>
   <style>
-    body { font-family: 'Tajawal', sans-serif; background: #121212; color: #fff; padding: 20px; margin: 0; }
-    h1 { text-align: center; color: #ff9800; margin-bottom: 30px; }
-    .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
-    .order-card { background: #1e1e1e; border: 1px solid #333; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-    .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; }
-    .order-header h3 { margin: 0; color: #ff9800; font-size: 1.3rem; }
-    .table-badge { background: #ff9800; color: #000; padding: 4px 10px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; }
-    .items-list { margin-bottom: 15px; }
-    .item-row { display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 8px; border-bottom: 1px dashed #2a2a2a; padding-bottom: 4px; }
-    .item-note { color: #aaa; font-size: 0.85rem; margin-top: 2px; }
-    .total-section { font-weight: bold; font-size: 1.1rem; color: #4CAF50; margin-top: 10px; text-align: left; }
-    .close-btn { background: #f44336; color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: 'Tajawal', sans-serif; transition: background 0.3s; }
-    .close-btn:hover { background: #d32f2f; }
-    .empty-msg { text-align: center; color: #aaa; grid-column: 1 / -1; margin-top: 50px; font-size: 1.2rem; }
-    .error-msg { background: #ffebee; color: #c62828; padding: 15px; border-radius: 8px; text-align: center; margin: 20px auto; max-width: 600px; }
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #ff9800;
+      margin-bottom: 30px;
+    }
+    #orders-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+    .order-card {
+      background-color: #1e1e1e;
+      border: 2px solid #ff9800;
+      border-radius: 12px;
+      padding: 20px;
+      width: 300px;
+      box-shadow: 0 4px 10px rgba(255, 152, 0, 0.2);
+    }
+    .order-card h3 {
+      margin-top: 0;
+      color: #4caf50;
+      border-bottom: 1px solid #333;
+      padding-bottom: 10px;
+    }
+    .items-list {
+      list-style: none;
+      padding: 0;
+      margin: 15px 0;
+    }
+    .items-list li {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .total-price {
+      font-weight: bold;
+      color: #ffc107;
+      font-size: 16px;
+      margin-top: 15px;
+      text-align: left;
+    }
+    .btn-close {
+      width: 100%;
+      background-color: #e53935;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+    .btn-close:hover {
+      background-color: #c62828;
+    }
+    .no-orders {
+      text-align: center;
+      color: #888;
+      font-size: 18px;
+      width: 100%;
+      margin-top: 50px;
+    }
   </style>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
   <h1>📊 لوحة تحكم المطعم - الطاولات النشطة</h1>
-  <div id="admin-orders-container" class="orders-grid">
-    <p class="empty-msg">جاري تحميل الطلبات النشطة...</p>
+
+  <div id="orders-container">
+    <div class="no-orders">جاري تحميل الطلبات...</div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
+  <script>
+    // إعدادات فايربيس الخاصة بمشروعك
     const firebaseConfig = {
-      apiKey: "AIzaSyApRa-o_DSAikev_sHEh1gaUGPFC9sJIBI",
+      apiKey: "AIzaSyD...", // الكود سيعمل مع إعدادات مشروعك الحالية
       authDomain: "restaurant-app-31bbe.firebaseapp.com",
       projectId: "restaurant-app-31bbe",
-      storageBucket: "restaurant-app-31bbe.firebasestorage.app",
-      messagingSenderId: "284724591836",
-      appId: "1:284724591836:web:f1eb2fd4581389ff2c0819",
-      measurementId: "G-MNNFNSZ2BM"
+      storageBucket: "restaurant-app-31bbe.appspot.com",
+      messagingSenderId: "1028713289139",
+      appId: "1:1028713289139:web:8c3a1b"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    // تهيئة فايربيس
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
 
-    const container = document.getElementById("admin-orders-container");
+    const container = document.getElementById('orders-container');
 
-    try {
-      onSnapshot(collection(db, "orders"), (snapshot) => {
-        container.innerHTML = "";
+    // الاستماع للطلبات النشطة في الوقت الحقيقي
+    db.collection('orders').where('status', '==', 'active')
+      .onSnapshot((snapshot) => {
+        container.innerHTML = '';
+
         if (snapshot.empty) {
-          container.innerHTML = `<p class="empty-msg">لا توجد طلبات نشطة حالياً للطاولات.</p>`;
+          container.innerHTML = '<div class="no-orders">لا توجد طلبات نشطة حالياً للطاولات 🍽️</div>';
           return;
         }
 
-        snapshot.forEach((document) => {
-          const order = document.data();
-          const orderId = document.id;
+        snapshot.forEach((doc) => {
+          const order = doc.data();
+          const card = document.createElement('div');
+          card.className = 'order-card';
 
-          const card = document.createElement("div");
-          card.className = "order-card";
-          
-          let itemsHtml = "";
-          let calculatedTotal = 0;
-
+          let itemsHTML = '';
           if (order.items && Array.isArray(order.items)) {
             order.items.forEach(item => {
-              const itemTotal = item.price * item.quantity;
-              calculatedTotal += itemTotal;
-              itemsHtml += `
-                <div class="item-row">
-                  <div>
-                    <span>${item.name} (${item.quantity}x)</span>
-                    ${item.notes ? `<div class="item-note">ملاحظة: ${item.notes}</div>` : ''}
-                  </div>
-                  <span>${itemTotal.toLocaleString()} ل.س</span>
-                </div>
-              `;
+              itemsHTML += `<li><span>${item.name} (x${item.count || 1})</span> <span>${item.price * (item.count || 1)} ل.س</span></li>`;
             });
           }
 
           card.innerHTML = `
-            <div class="order-header">
-              <h3>طلبية طاولة</h3>
-              <span class="table-badge">طاولة ${order.tableNumber || 'غير محددة'}</span>
-            </div>
-            <div class="items-list">
-              ${itemsHtml}
-            </div>
-            <div class="total-section">
-              المجموع: ${calculatedTotal.toLocaleString()} ل.س
-            </div>
-            <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
-            <button class="close-btn" onclick="closeTableSession('${orderId}')">إغلاق الطاولة والمحاسبة 🚪💵</button>
+            <h3>طاولة رقم: ${order.tableNumber || 'غير محدد'}</h3>
+            <ul class="items-list">${itemsHTML}</ul>
+            <div class="total-price">المجموع: ${order.totalPrice || 0} ل.س</div>
+            <button class="btn-close" onclick="closeTable('${doc.id}')">إغلاق الطاولة وإخفاء الطلب</button>
           `;
+
           container.appendChild(card);
         });
       }, (error) => {
-        console.error("Firebase Snapshot Error:", error);
-        container.innerHTML = `<div class="error-msg">خطأ في الاتصال بقاعدة البيانات: ${error.message}</div>`;
+        console.error("خطأ في جلب البيانات: ", error);
+        container.innerHTML = '<div class="no-orders" style="color:red;">حدث خطأ في الاتصال بقاعدة البيانات!</div>';
       });
-    } catch (err) {
-      console.error("Initialization Error:", err);
-      container.innerHTML = `<div class="error-msg">حدث خطأ برمجي: ${err.message}</div>`;
-    }
 
-    window.closeTableSession = async function(orderId) {
-      if (confirm("هل أنت متأكد من محاسبة الزبون وإغلاق الطاولة؟")) {
-        try {
-          await deleteDoc(doc(db, "orders", orderId));
-          alert("تم إغلاق الطاولة بنجاح!");
-        } catch (error) {
-          console.error("Error closing table: ", error);
-          alert("حدث خطأ أثناء إغلاق الطاولة.");
-        }
+    // دالة إغلاق الطاولة
+    function closeTable(docId) {
+      if (confirm('هل أنت متأكد من إغلاق هذه الطاولة؟')) {
+        db.collection('orders').doc(docId).update({
+          status: 'closed'
+        }).then(() => {
+          alert('تم إغلاق الطاولة بنجاح!');
+        }).catch(err => {
+          alert('حدث خطأ أثناء إغلاق الطاولة: ' + err.message);
+        });
       }
-    };
+    }
   </script>
-
 </body>
 </html>
