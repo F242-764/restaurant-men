@@ -5,33 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>قائمة الطعام الفاخرة</title>
   <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script type="module" src="script.js"></script>
 </head>
 <body>
 
-  <header class="menu-header">
-    <h1>✨ أهلاً وسهلاً بكم ✨</h1>
-    <div id="table-display" class="table-badge">طاولة رقم: --</div>
+  <!-- هيدر الصفحة بتنسيق أنيق وشريط السلة -->
+  <header class="glass-header">
+    <div class="header-content">
+      <h1 class="logo-text">🍽️ قائمة الطعام</h1>
+      <div id="table-display" class="table-badge">طاولة رقم: --</div>
+      <a id="cart-link" href="cart.html" class="cart-btn">
+        🛒 السلة <span id="cart-count">0</span>
+      </a>
+    </div>
   </header>
 
-  <nav class="categories-nav">
-    <button class="cat-btn active" onclick="filterMenu('all')">✨ الكل</button>
-    <button class="cat-btn" onclick="filterMenu('drinks')">🥤 مشروبات</button>
-    <button class="cat-btn" onclick="filterMenu('arabic')">🥙 أكل شرقي</button>
-    <button class="cat-btn" onclick="filterMenu('western')">🍕 أكل غربي</button>
-    <button class="cat-btn" onclick="filterMenu('starters')">🍟 مقبلات</button>
-    <button class="cat-btn" onclick="filterMenu('desserts')">🍰 حلويات</button>
-  </nav>
+  <main class="main-container">
+    <!-- أزرار التصنيفات التفاعلية لفلترة الأصناف -->
+    <nav class="categories-bar">
+      <button class="category-btn active" onclick="filterCategory('all')">الكل 🌟</button>
+      <button class="category-btn" onclick="filterCategory('drinks')">مشروبات 🥤</button>
+      <button class="category-btn" onclick="filterCategory('arabic')">عربي 🍗</button>
+      <button class="category-btn" onclick="filterCategory('western')">غربي 🍕</button>
+      <button class="category-btn" onclick="filterCategory('starters')">مقبلات 🍟</button>
+      <button class="category-btn" onclick="filterCategory('desserts')">حلويات 🍰</button>
+    </nav>
 
-  <main id="menu-container" class="menu-grid">
-    <!-- سيتم تعبئة الوجبات تلقائياً عبر الجافاسكريبت -->
+    <!-- حاوية عرض الأطباق والوجبات -->
+    <div id="menu-container" class="menu-grid"></div>
   </main>
 
-  <div class="floating-cart">
-    <a id="cart-link" href="cart.html" class="cart-floating-btn">
-      🛒 السلة <span id="cart-count" class="badge">0</span>
-    </a>
-  </div>
-
-  <script type="module" src="script.js"></script>
 </body>
 </html>
