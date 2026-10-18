@@ -19,7 +19,8 @@
     .total-section { font-weight: bold; font-size: 1.1rem; color: #4CAF50; margin-top: 10px; text-align: left; }
     .close-btn { background: #f44336; color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: 'Tajawal', sans-serif; transition: background 0.3s; }
     .close-btn:hover { background: #d32f2f; }
-    .empty-msg { text-align: center; color: #775; grid-column: 1 / -1; margin-top: 50px; font-size: 1.2rem; }
+    .empty-msg { text-align: center; color: #aaa; grid-column: 1 / -1; margin-top: 50px; font-size: 1.2rem; }
+    .error-msg { background: #ffebee; color: #c62828; padding: 15px; border-radius: 8px; text-align: center; margin: 20px auto; max-width: 600px; }
   </style>
 </head>
 <body>
@@ -46,66 +47,72 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // الاستماع الفوري للطلبات من قاعدة البيانات
     const container = document.getElementById("admin-orders-container");
 
-    onSnapshot(collection(db, "orders"), (snapshot) => {
-      container.innerHTML = "";
-      if (snapshot.empty) {
-        container.innerHTML = `<p class="empty-msg">لا توجد طلبات نشطة حالياً للطاولات.</p>`;
-        return;
-      }
-
-      snapshot.forEach((document) => {
-        const order = document.data();
-        const orderId = document.id;
-
-        const card = document.createElement("div");
-        card.className = "order-card";
-        
-        let itemsHtml = "";
-        let calculatedTotal = 0;
-
-        if (order.items && Array.isArray(order.items)) {
-          order.items.forEach(item => {
-            const itemTotal = item.price * item.quantity;
-            calculatedTotal += itemTotal;
-            itemsHtml += `
-              <div class="item-row">
-                <div>
-                  <span>${item.name} (${item.quantity}x)</span>
-                  ${item.notes ? `<div class="item-note">ملاحظة: ${item.notes}</div>` : ''}
-                </div>
-                <span>${itemTotal.toLocaleString()} ل.س</span>
-              </div>
-            `;
-          });
+    try {
+      onSnapshot(collection(db, "orders"), (snapshot) => {
+        container.innerHTML = "";
+        if (snapshot.empty) {
+          container.innerHTML = `<p class="empty-msg">لا توجد طلبات نشطة حالياً للطاولات.</p>`;
+          return;
         }
 
-        card.innerHTML = `
-          <div class="order-header">
-            <h3>طلبية طاولة</h3>
-            <span class="table-badge">طاولة ${order.tableNumber || 'غير محددة'}</span>
-          </div>
-          <div class="items-list">
-            ${itemsHtml}
-          </div>
-          <div class="total-section">
-            المجموع: ${calculatedTotal.toLocaleString()} ل.س
-          </div>
-          <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
-          <button class="close-btn" onclick="closeTableSession('${orderId}')">إغلاق الطاولة والمحاسبة 🚪💵</button>
-        `;
-        container.appendChild(card);
-      });
-    });
+        snapshot.forEach((document) => {
+          const order = document.data();
+          const orderId = document.id;
 
-    // دالة إغلاق الطاولة وحذف الطلب من النظام بعد المحاسبة
+          const card = document.createElement("div");
+          card.className = "order-card";
+          
+          let itemsHtml = "";
+          let calculatedTotal = 0;
+
+          if (order.items && Array.isArray(order.items)) {
+            order.items.forEach(item => {
+              const itemTotal = item.price * item.quantity;
+              calculatedTotal += itemTotal;
+              itemsHtml += `
+                <div class="item-row">
+                  <div>
+                    <span>${item.name} (${item.quantity}x)</span>
+                    ${item.notes ? `<div class="item-note">ملاحظة: ${item.notes}</div>` : ''}
+                  </div>
+                  <span>${itemTotal.toLocaleString()} ل.س</span>
+                </div>
+              `;
+            });
+          }
+
+          card.innerHTML = `
+            <div class="order-header">
+              <h3>طلبية طاولة</h3>
+              <span class="table-badge">طاولة ${order.tableNumber || 'غير محددة'}</span>
+            </div>
+            <div class="items-list">
+              ${itemsHtml}
+            </div>
+            <div class="total-section">
+              المجموع: ${calculatedTotal.toLocaleString()} ل.س
+            </div>
+            <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
+            <button class="close-btn" onclick="closeTableSession('${orderId}')">إغلاق الطاولة والمحاسبة 🚪💵</button>
+          `;
+          container.appendChild(card);
+        });
+      }, (error) => {
+        console.error("Firebase Snapshot Error:", error);
+        container.innerHTML = `<div class="error-msg">خطأ في الاتصال بقاعدة البيانات: ${error.message}</div>`;
+      });
+    } catch (err) {
+      console.error("Initialization Error:", err);
+      container.innerHTML = `<div class="error-msg">حدث خطأ برمجي: ${err.message}</div>`;
+    }
+
     window.closeTableSession = async function(orderId) {
       if (confirm("هل أنت متأكد من محاسبة الزبون وإغلاق الطاولة؟")) {
         try {
           await deleteDoc(doc(db, "orders", orderId));
-          alert("تم إغلاق الطاولة بنجاح وأصبحت فارغة!");
+          alert("تم إغلاق الطاولة بنجاح!");
         } catch (error) {
           console.error("Error closing table: ", error);
           alert("حدث خطأ أثناء إغلاق الطاولة.");
